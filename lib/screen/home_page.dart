@@ -1,27 +1,37 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class ChatGPTService {
-  static final String apiUrl = "https://api.chatgpt.com/send-message";
+  static const String apiUrl =
+      "https://api.openai.com/v1/engines/davinci-codex/completions";
 
   static Future<String> sendMessage(String message) async {
-    final response = await http.post(Uri.parse(apiUrl),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"message": message}));
+    try {
+      final response = await http.post(Uri.parse(apiUrl),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+                "Bearer $apikey" // You can get your API key from https://beta.openai.com/
+          },
+          body: jsonEncode(
+              {"prompt": message, "temperature": 0.5, "max_tokens": 60}));
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body)["message"];
-    } else {
-      throw Exception("Failed to send message");
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body)["choices"][0]["text"].toString();
+      } else {
+        throw Exception("Failed to send message: ${response.body}");
+      }
+    } catch (e) {
+      throw Exception("Failed to send message: $e");
     }
   }
 }
 
-
-
-
 class ChatPage extends StatefulWidget {
+  const ChatPage({Key? key}) : super(key: key);
+
   @override
   _ChatPageState createState() => _ChatPageState();
 }
